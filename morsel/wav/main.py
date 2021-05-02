@@ -5,14 +5,14 @@
 # TODO: Add docstrings
 
 
+from typing import Iterable, Union
+
+
 def _int_to_field(i: int, length: int):
     return i.to_bytes(length, "little", signed=False)
 
 
 class PCMWaveFileHeader(object):
-    # I'm not sure whether I should vertically align the assignments or
-    # not. I've looked at it both with and without aligning and I'm
-    # torn as to which looks better. I'm open to discussion, though.
     # fmt: off
     _EMPTY = b"\x00"
     chunk_id        = b"RIFF"
@@ -24,11 +24,10 @@ class PCMWaveFileHeader(object):
     num_channels    = _EMPTY * 2
     sample_rate     = _EMPTY * 4
     byte_rate       = _EMPTY * 4  # SampleRate * NumChannels * BitsPerSample / 8
-    block_align     = _EMPTY * 2  # NumChannels * BitsPerSample / 8 (length of one sample)
+    block_align     = _EMPTY * 2  # NumChannels * BitsPerSample / 8 (one sample length)
     bits_per_sample = _EMPTY * 2  # Bit depth (e.g. 16 bit, 24 bit)
     subchunk_2_id   = b"data"
     subchunk_2_size = _EMPTY * 4  # NumSamples * NumChannels * BitsPerSample / 8
-
     # Alias Python variables to RIFF field names
     ChunkID       = chunk_id
     ChunkSize     = chunk_size
@@ -60,7 +59,7 @@ class PCMWaveFileHeader(object):
         block_align = num_channels * bits_per_sample // 8
         subchunk_2_size = num_samples * num_channels * bits_per_sample // 8
         chunk_size = 36 + subchunk_2_size
-        # Set fields
+        # Set non-constant fields
         self.chunk_size = _int_to_field(chunk_size, 4)
         self.num_channels = _int_to_field(num_channels, 2)
         self.sample_rate = _int_to_field(sample_rate, 4)
@@ -87,3 +86,10 @@ class PCMWaveFileHeader(object):
                 self.subchunk_2_size,
             )
         )
+
+
+class PCMWaveFileData(object):
+    def __init__(
+        self, data: Union[Iterable[int], Iterable[float]], pcm_format: str = "s24le"
+    ):
+        ...

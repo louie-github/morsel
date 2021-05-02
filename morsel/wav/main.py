@@ -7,6 +7,8 @@
 
 from typing import Iterable, Union
 
+from .pcm_formats import PCMFormat, SUPPORTED_PCM_FORMATS
+
 
 def _int_to_field(i: int, length: int):
     return i.to_bytes(length, "little", signed=False)
@@ -90,6 +92,18 @@ class PCMWaveFileHeader(object):
 
 class PCMWaveFileData(object):
     def __init__(
-        self, data: Union[Iterable[int], Iterable[float]], pcm_format: str = "s24le"
+        self,
+        data: Union[Iterable[int], Iterable[float]],
+        pcm_format: Union[str, PCMFormat] = "s24le",
     ):
-        ...
+        if not isinstance(pcm_format, PCMFormat):
+            pcm_format_obj = SUPPORTED_PCM_FORMATS.get(pcm_format, None)
+            if pcm_format_obj is None:
+                raise NotImplementedError(
+                    " ".join(
+                        f"PCM format {pcm_format} is either an invalid format",
+                        "or is not yet currently supported.",
+                    )
+                )
+            else:
+                pcm_format = pcm_format_obj

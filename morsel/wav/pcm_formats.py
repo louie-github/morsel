@@ -2,14 +2,19 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import Dict
-
-
 class PCMFormat(object):
     def __init__(
-        self, *, name: str, typ=None, signed=None, bit_depth=None, endianness=None
+        self,
+        *,
+        name: str,
+        description: str,
+        typ=None,
+        signed=None,
+        bit_depth=None,
+        endianness=None,
     ):
         self.name = name
+        self.description = description
         self.typ = typ
         self.signed = signed
         self.bit_depth = bit_depth
@@ -19,7 +24,7 @@ class PCMFormat(object):
         # I'm trying to replicate Python's dataclass __repr__() method,
         # and I'm sure there's a cleaner and faster way to do it, but
         # I can't think of one right now. TODO: Improve this.
-        attribs = ["name", "typ", "signed", "bit_depth", "endianness"]
+        attribs = ["name", "description", "typ", "signed", "bit_depth", "endianness"]
         formatted_attribs = []
         for attrib in attribs:
             attrib_value = getattr(self, attrib)
@@ -33,145 +38,175 @@ class PCMFormat(object):
 
 # Reference: FFMPEG documentation on Audio Types
 # https://trac.ffmpeg.org/wiki/audio%20types
-PCM_FORMATS: Dict[str, PCMFormat] = {
-    "alaw": PCMFormat(
+PCM_FORMATS = [
+    PCMFormat(
+        # Unknown format (missing information)
+        name="alaw",
+        description="PCM A-law",
         typ="alaw",
+    ),
+    PCMFormat(
+        name="f32be",
+        description="PCM 32-bit floating-point big-endian",
+        typ=float,
+        bit_depth=32,
+        endianness="big",
+    ),
+    PCMFormat(
+        name="f32le",
+        description="PCM 32-bit floating-point little-endian",
+        typ=float,
+        bit_depth=32,
+        endianness="little",
+    ),
+    PCMFormat(
+        name="f64be",
+        description="PCM 64-bit floating-point big-endian",
+        typ=float,
+        bit_depth=64,
+        endianness="big",
+    ),
+    PCMFormat(
+        name="f64le",
+        description="PCM 64-bit floating-point little-endian",
+        typ=float,
+        bit_depth=64,
+        endianness="little",
+    ),
+    PCMFormat(
         # Unknown format (missing information)
-        name="PCM A-law",
-    ),
-    "f32be": PCMFormat(
-        typ=float,
-        bit_depth=32,
-        endianness="big",
-        name="PCM 32-bit floating-point big-endian",
-    ),
-    "f32le": PCMFormat(
-        typ=float,
-        bit_depth=32,
-        endianness="little",
-        name="PCM 32-bit floating-point little-endian",
-    ),
-    "f64be": PCMFormat(
-        typ=float,
-        bit_depth=64,
-        endianness="big",
-        name="PCM 64-bit floating-point big-endian",
-    ),
-    "f64le": PCMFormat(
-        typ=float,
-        bit_depth=64,
-        endianness="little",
-        name="PCM 64-bit floating-point little-endian",
-    ),
-    "mulaw": PCMFormat(
+        name="mulaw",
+        description="PCM mu-law",
         typ="mulaw",
+    ),
+    PCMFormat(
+        name="s16be",
+        description="PCM signed 16-bit big-endian",
+        typ=int,
+        signed=True,
+        bit_depth=16,
+        endianness="big",
+    ),
+    PCMFormat(
+        name="s16le",
+        description="PCM signed 16-bit little-endian",
+        typ=int,
+        signed=True,
+        bit_depth=16,
+        endianness="little",
+    ),
+    PCMFormat(
+        name="s24be",
+        description="PCM signed 24-bit big-endian",
+        typ=int,
+        signed=True,
+        bit_depth=24,
+        endianness="big",
+    ),
+    PCMFormat(
+        name="s24le",
+        description="PCM signed 24-bit little-endian",
+        typ=int,
+        signed=True,
+        bit_depth=24,
+        endianness="little",
+    ),
+    PCMFormat(
+        name="s32be",
+        description="PCM signed 32-bit big-endian",
+        typ=int,
+        signed=True,
+        bit_depth=32,
+        endianness="big",
+    ),
+    PCMFormat(
+        name="s32le",
+        description="PCM signed 32-bit little-endian",
+        typ=int,
+        signed=True,
+        bit_depth=32,
+        endianness="little",
+    ),
+    PCMFormat(
+        name="s8",
+        description="PCM signed 8-bit",
+        typ=int,
+        signed=True,
+        bit_depth=8,
+    ),
+    PCMFormat(
+        name="u16be",
+        description="PCM unsigned 16-bit big-endian",
+        typ=int,
+        signed=False,
+        bit_depth=16,
+        endianness="big",
+    ),
+    PCMFormat(
+        name="u16le",
+        description="PCM unsigned 16-bit little-endian",
+        typ=int,
+        signed=False,
+        bit_depth=16,
+        endianness="little",
+    ),
+    PCMFormat(
+        name="u24be",
+        description="PCM unsigned 24-bit big-endian",
+        typ=int,
+        signed=False,
+        bit_depth=24,
+        endianness="big",
+    ),
+    PCMFormat(
+        name="u24le",
+        description="PCM unsigned 24-bit little-endian",
+        typ=int,
+        signed=False,
+        bit_depth=24,
+        endianness="little",
+    ),
+    PCMFormat(
+        name="u32be",
+        description="PCM unsigned 32-bit big-endian",
+        typ=int,
+        signed=False,
+        bit_depth=32,
+        endianness="big",
+    ),
+    PCMFormat(
+        name="u32le",
+        description="PCM unsigned 32-bit little-endian",
+        typ=int,
+        signed=False,
+        bit_depth=32,
+        endianness="little",
+    ),
+    PCMFormat(
+        name="u8",
+        description="PCM unsigned 8-bit",
+        typ=int,
+        signed=False,
+        bit_depth=8,
+    ),
+    PCMFormat(
         # Unknown format (missing information)
-        name="PCM mu-law",
-    ),
-    "s16be": PCMFormat(
-        typ=int,
-        signed=True,
-        bit_depth=16,
-        endianness="big",
-        name="PCM signed 16-bit big-endian",
-    ),
-    "s16le": PCMFormat(
-        typ=int,
-        signed=True,
-        bit_depth=16,
-        endianness="little",
-        name="PCM signed 16-bit little-endian",
-    ),
-    "s24be": PCMFormat(
-        typ=int,
-        signed=True,
-        bit_depth=24,
-        endianness="big",
-        name="PCM signed 24-bit big-endian",
-    ),
-    "s24le": PCMFormat(
-        typ=int,
-        signed=True,
-        bit_depth=24,
-        endianness="little",
-        name="PCM signed 24-bit little-endian",
-    ),
-    "s32be": PCMFormat(
-        typ=int,
-        signed=True,
-        bit_depth=32,
-        endianness="big",
-        name="PCM signed 32-bit big-endian",
-    ),
-    "s32le": PCMFormat(
-        typ=int,
-        signed=True,
-        bit_depth=32,
-        endianness="little",
-        name="PCM signed 32-bit little-endian",
-    ),
-    "s8": PCMFormat(
-        typ=int,
-        signed=True,
-        bit_depth=8,
-        name="PCM signed 8-bit",
-    ),
-    "u16be": PCMFormat(
-        typ=int,
-        signed=False,
-        bit_depth=16,
-        endianness="big",
-        name="PCM unsigned 16-bit big-endian",
-    ),
-    "u16le": PCMFormat(
-        typ=int,
-        signed=False,
-        bit_depth=16,
-        endianness="little",
-        name="PCM unsigned 16-bit little-endian",
-    ),
-    "u24be": PCMFormat(
-        typ=int,
-        signed=False,
-        bit_depth=24,
-        endianness="big",
-        name="PCM unsigned 24-bit big-endian",
-    ),
-    "u24le": PCMFormat(
-        typ=int,
-        signed=False,
-        bit_depth=24,
-        endianness="little",
-        name="PCM unsigned 24-bit little-endian",
-    ),
-    "u32be": PCMFormat(
-        typ=int,
-        signed=False,
-        bit_depth=32,
-        endianness="big",
-        name="PCM unsigned 32-bit big-endian",
-    ),
-    "u32le": PCMFormat(
-        typ=int,
-        signed=False,
-        bit_depth=32,
-        endianness="little",
-        name="PCM unsigned 32-bit little-endian",
-    ),
-    "u8": PCMFormat(
-        typ=int,
-        signed=False,
-        bit_depth=8,
-        name="PCM unsigned 8-bit",
-    ),
-    "vidc": PCMFormat(
+        name="vidc",
+        description="PCM Archimedes VIDC",
         typ="vidc",
-        # Unknown format (missing information)
-        name="PCM Archimedes VIDC",
     ),
-}
+]
 
-_SUPPORTED_PCM_FORMATS = set(["s16le", "s24le", "s32le"])
+
+STR_TO_PCM_FORMAT = {pcm_format.name: pcm_format for pcm_format in PCM_FORMATS}
+
+# Currently, we support s16le, s24le, and s32le (signed int little-endian)
 SUPPORTED_PCM_FORMATS = {
-    k: v for k, v in PCM_FORMATS.items() if k in _SUPPORTED_PCM_FORMATS
+    pcm_format
+    for pcm_format in PCM_FORMATS
+    if (
+        pcm_format.typ == int
+        and pcm_format.signed
+        and pcm_format.endianness == "little"
+    )
 }

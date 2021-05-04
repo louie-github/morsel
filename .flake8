@@ -13,4 +13,4 @@ exclude =
 
 per-file-ignores = 
     # Ignore "multiple spaces after operator" for WAV header
-    morsel/wav/main.py:E221
+    morsel/wav.py:E221

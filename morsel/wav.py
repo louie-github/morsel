@@ -7,7 +7,7 @@ import itertools
 
 from typing import Iterable
 
-# TODO: Add docstrings, __repr__() methods, and unittests
+# TODO: Add module docstrings, __repr__() methods, and unit tests
 
 # Currently, this script only supports exporting s16le, s24le, and s32le
 # wav files.
@@ -116,9 +116,9 @@ def generate_pcm_wave_file_header(
 def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int) -> Iterable[int]:
     """Maps float values in the range -1.0 to 1.0 to integer values.
 
-    The integer range is determined by the bits_per_sample value. The
-    range is defined as the minimum and maximum values representable
-    using signed integers of size bits_per_sample.
+    The integer range is determined by *bits_per_sample*. The range is
+    defined as the minimum and maximum values representable using
+    signed integers of size *bits_per_sample*.
 
     Args:
         floats (Iterable[float]):
@@ -127,7 +127,8 @@ def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int) -> Iterab
             The bit depth used to determine the output integer range.
 
     Returns:
-        Iterable[int]: The mapped integer values.
+        Iterable[int]:
+            The mapped integer values.
     """
     max_signed = 2 ** (bits_per_sample - 1) - 1
     min_signed = ~max_signed
@@ -147,9 +148,9 @@ def _ints_to_pcm_wave(
     """
     Converts raw integer data to PCM data with interleaved channels.
 
-    If num_channels is given, int_data will be repeated and used to
-    fill all channels, so each data point will be repeated num_channels
-    times (each sample has interleaved channel data).
+    If *num_channels* is given, *int_data* will be repeated and used to
+    fill all channels, so each data point will be repeated
+    *num_channels* times (each sample has interleaved channel data).
 
     Args:
         int_data (Iterable[int]):
@@ -211,10 +212,10 @@ def generate_sine_wave(
 ) -> Iterable[bytes]:
     """Generates PCM data for a sine wave.
 
-    If allow_clipping = True, then any floating point values generated
-    in the inner sine wave function that fall outside the range
-    -1.0 to 1.0 will be clamped to either -1.0 or 1.0, whichever is
-    appropriate.
+    If `allow_clipping = True`, then any floating point values
+    generated in the inner sine wave function that fall outside the
+    range (-1.0 to 1.0) will be clamped to either -1.0 or 1.0,
+    whichever is appropriate.
 
     Args:
         frequency (int, optional):
@@ -308,6 +309,8 @@ def generate_sine_wave_file(
     allow_clipping=True,
 ) -> int:
     """Generate a PCM WAVE (.wav) file containing a sine wave.
+
+    See `generate_sine_wave()` for more details.
 
     Args:
         filename (str):

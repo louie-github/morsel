@@ -103,6 +103,7 @@ def _generate_sine_wave(
 
 
 def generate_sine_wave(
+    *,
     frequency: int = 500,
     amplitude: float = 0.75,
     num_samples: int = 48000,
@@ -164,6 +165,7 @@ def generate_sine_wave(
 def generate_sine_wave_file(
     filename: str,
     buffer_size: int = 8192,
+    *,
     frequency: int = 500,
     amplitude: float = 0.75,
     num_samples: int = 48000,

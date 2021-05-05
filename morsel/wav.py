@@ -4,7 +4,7 @@
 import math
 import io
 import itertools
-from typing import Iterable, Iterator, Optional
+from typing import Iterable, Iterator
 
 # TODO: Add docstrings, __repr__() methods, and unittests
 
@@ -159,41 +159,6 @@ def generate_sine_wave(
     )
     output = itertools.islice(itertools.cycle(exact_cycle), num_samples * num_channels)
     return output
-
-
-class PCMWaveFileIO(io.BufferedIOBase):
-    def __init__(self, header: bytes, wave_data: Iterator[bytes]) -> None:
-        super().__init__()
-        self.header = header
-        self.wave_data = wave_data
-        self.iterator = iter(itertools.chain((header,), wave_data))
-        self.buffer = bytearray()
-
-    def read(self, size: int = -1) -> Optional[bytes]:
-        buffer = self.buffer
-        iterator = self.iterator
-        if size > 0:
-            try:
-                while len(buffer) < size:
-                    buffer.extend(next(iterator))
-            except StopIteration:
-                pass
-            ret = buffer[:size]
-            del buffer[:size]
-            return bytes(ret)
-        else:
-            return b"".join(iterator)
-
-    def readinto(self, buffer) -> int:
-        output = self.read(len(buffer))
-        buffer[: len(output)] = output
-        return len(output)
-
-    def seekable(self) -> bool:
-        return False
-
-    def writable(self) -> bool:
-        return False
 
 
 def generate_sine_wave_file(

@@ -188,6 +188,7 @@ def generate_sine_wave_file(
         num_channels=num_channels,
         sample_rate=sample_rate,
         bits_per_sample=bits_per_sample,
+        allow_clipping=allow_clipping,
     )
     bytes_per_sample = bits_per_sample // 8
     chunk_size = buffer_size // bytes_per_sample

@@ -6,10 +6,11 @@ import io
 import itertools
 from typing import Iterable, Iterator, Optional
 
-# TODO: Add docstrings and __repr__() methods
+# TODO: Add docstrings, __repr__() methods, and unittests
+
 # Currently, this script only supports exporting s16le, s24le, and s32le
 # wav files.
-SUPPORTED_BIT_DEPTHS = 16, 24, 32
+SUPPORTED_BIT_DEPTHS = {16, 24, 32}
 
 
 def _int_to_field(i: int, length: int) -> None:
@@ -32,12 +33,12 @@ def generate_pcm_wave_file_header(
     sample_rate: int = 48000,
     bits_per_sample: int = 16,
 ) -> bytes:
-    if bits_per_sample not in {16, 24, 32}:
+    if bits_per_sample not in SUPPORTED_BIT_DEPTHS:
         raise ValueError(
             " ".join(
                 (
                     "Bit depths other than 16, 24, or 32 are currently",
-                    f"not supported (got {bits_per_sample})",
+                    f"not supported (requested {bits_per_sample})",
                 )
             )
         )
@@ -110,6 +111,16 @@ def generate_sine_wave(
     bits_per_sample: int = 16,
     allow_clipping=True,
 ) -> Iterator:
+    if bits_per_sample not in SUPPORTED_BIT_DEPTHS:
+        raise ValueError(
+            " ".join(
+                (
+                    "Bit depths other than 16, 24, or 32 are currently",
+                    f"not supported (requested {bits_per_sample})",
+                )
+            )
+        )
+
     if amplitude < 0.0:
         raise ValueError("Given amplitude {amplitude} is smaller than 0.0.")
     elif amplitude > 1.0 and not allow_clipping:
@@ -123,9 +134,8 @@ def generate_sine_wave(
         )
     # Algorithm: Calculate the minimum amount of cycles whose duration
     # can be represented exactly by the given sample rate.
-    # This avoids rounding errors and is a little bit faster.
-    # Otherwise, values that map to 0 instead map to -1 due to the
-    # aforementioned rounding errors.
+    # This avoids extra rounding errors and is faster. Otherwise, values
+    # that map to 0 might instead map to -1 due to said errors.
     min_cycles = frequency // math.gcd(frequency, sample_rate)
     min_samples = sample_rate * min_cycles // frequency
     # Don't generate extra samples if duration is shorter than minimum
@@ -139,8 +149,8 @@ def generate_sine_wave(
         sample_rate=sample_rate,
     )
     assert all(-1.0 <= value <= 1.0 for value in exact_cycle)
+    # Convert raw float data to integer PCM data with interleaved channels
     exact_cycle = _map_floats_to_ints(exact_cycle, bits_per_sample=bits_per_sample)
-    # Convert to PCM WAVE data bytes and repeat data for each channel
     bytes_per_sample = bits_per_sample // 8
     exact_cycle = (
         i.to_bytes(bytes_per_sample, "little", signed=True) for i in exact_cycle
@@ -187,16 +197,68 @@ class PCMWaveFileIO(io.BufferedIOBase):
         return False
 
 
-if __name__ == "__main__":
-    BUFSIZE = io.DEFAULT_BUFFER_SIZE
+def generate_sine_wave_file(
+    filename: str,
+    buffer_size: int = 8192,
+    frequency: int = 500,
+    amplitude: float = 0.75,
+    num_samples: int = 48000,
+    num_channels: int = 2,
+    sample_rate: int = 48000,
+    bits_per_sample: int = 16,
+    allow_clipping=True,
+) -> int:
+    header = generate_pcm_wave_file_header(
+        num_samples=num_samples,
+        num_channels=num_channels,
+        sample_rate=sample_rate,
+        bits_per_sample=bits_per_sample,
+    )
+    data = generate_sine_wave(
+        frequency=frequency,
+        amplitude=amplitude,
+        num_samples=num_samples,
+        num_channels=num_channels,
+        sample_rate=sample_rate,
+        bits_per_sample=bits_per_sample,
+    )
+    bytes_per_sample = bits_per_sample // 8
+    chunk_size = buffer_size // bytes_per_sample
+    data_iter = iter(data)
+    bytes_written = 0
+    with open(filename, "wb") as f:
+        bytes_written += f.write(header)
+        finished = False
+        while not finished:
+            buffer = bytearray()
+            for _ in itertools.repeat(None, chunk_size):
+                try:
+                    buffer.extend(next(data_iter))
+                except StopIteration:
+                    finished = True
+                    break
+            bytes_written += f.write(buffer)
+    return bytes_written
 
-    for i in range(100):
-        header = generate_pcm_wave_file_header(
-            num_samples=48000, num_channels=2, sample_rate=48000, bits_per_sample=16
-        )
-        data = generate_sine_wave(
-            num_samples=48000, num_channels=2, sample_rate=48000, bits_per_sample=16
-        )
-        wavf = PCMWaveFileIO(header=header, wave_data=data)
-        for _ in range(192):
-            x = wavf.read(1024)
+
+if __name__ == "__main__":
+    import time
+
+    BUFSIZE = io.DEFAULT_BUFFER_SIZE
+    filename = "test-5min-512hz-sr48khz-s24le.wav"
+    frequency = 512
+    sample_rate = 48000
+    duration = 5 * 60 * sample_rate  # 5 minutes
+    bit_depth = 24
+
+    start_time = time.time()
+    generate_sine_wave_file(
+        filename=filename,
+        frequency=frequency,
+        sample_rate=sample_rate,
+        num_samples=duration,
+        bits_per_sample=bit_depth,
+    )
+    end_time = time.time()
+
+    print(f"Time taken: {end_time - start_time}")

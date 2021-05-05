@@ -10,6 +10,7 @@ from typing import Iterable, Iterator
 
 # Currently, this script only supports exporting s16le, s24le, and s32le
 # wav files.
+DEFAULT_BIT_DEPTH = 16
 SUPPORTED_BIT_DEPTHS = {16, 24, 32}
 
 
@@ -31,7 +32,7 @@ def generate_pcm_wave_file_header(
     num_samples: int,
     num_channels: int = 2,
     sample_rate: int = 48000,
-    bits_per_sample: int = 16,
+    bits_per_sample: int = DEFAULT_BIT_DEPTH,
 ) -> bytes:
     if bits_per_sample not in SUPPORTED_BIT_DEPTHS:
         raise ValueError(
@@ -109,7 +110,7 @@ def generate_sine_wave(
     num_samples: int = 48000,
     num_channels: int = 2,
     sample_rate: int = 48000,
-    bits_per_sample: int = 16,
+    bits_per_sample: int = DEFAULT_BIT_DEPTH,
     allow_clipping=True,
 ) -> Iterator:
     if bits_per_sample not in SUPPORTED_BIT_DEPTHS:
@@ -171,7 +172,7 @@ def generate_sine_wave_file(
     num_samples: int = 48000,
     num_channels: int = 2,
     sample_rate: int = 48000,
-    bits_per_sample: int = 16,
+    bits_per_sample: int = DEFAULT_BIT_DEPTH,
     allow_clipping=True,
 ) -> int:
     header = generate_pcm_wave_file_header(

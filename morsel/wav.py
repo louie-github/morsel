@@ -3,7 +3,7 @@
 
 import math
 import itertools
-from typing import Iterable
+from typing import Iterable, Iterator
 
 # TODO: Add docstrings and __repr__() methods
 # Currently, this script only supports exporting s16le, s24le, and s32le
@@ -91,6 +91,15 @@ def _generate_sine_wave(
     ]
 
 
+def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int):
+    max_signed = 2 ** (bits_per_sample - 1) - 1
+    min_signed = ~max_signed
+    # Every x increase from the minimum float value maps to this value
+    # above the minimum int value
+    step_size = (max_signed - min_signed) / (1.0 - (-1.0))
+    return (round((value - (-1.0)) * step_size + min_signed) for value in floats)
+
+
 def generate_sine_wave(
     frequency: int = 500,
     amplitude: float = 0.75,
@@ -99,7 +108,7 @@ def generate_sine_wave(
     sample_rate: int = 48000,
     bits_per_sample: int = 16,
     allow_clipping=True,
-) -> bytes:
+) -> Iterator:
     if amplitude < 0.0:
         raise ValueError("Given amplitude {amplitude} is smaller than 0.0.")
     elif amplitude > 1.0 and not allow_clipping:
@@ -113,37 +122,29 @@ def generate_sine_wave(
         )
     # Algorithm: Calculate the minimum amount of cycles whose duration
     # can be represented exactly by the given sample rate.
+    # This avoids rounding errors and is a little bit faster.
+    # Otherwise, values that map to 0 instead map to -1 due to the
+    # aforementioned rounding errors.
     min_cycles = frequency // math.gcd(frequency, sample_rate)
     min_samples = sample_rate * min_cycles // frequency
     # Don't generate extra samples if duration is shorter than minimum
     # exactly representable duration
+    min_samples = min(min_samples, num_samples)
     angular_frequency = 2 * math.pi * frequency
-    if num_samples < min_samples:
-        output = _generate_sine_wave(
-            angular_frequency=angular_frequency,
-            amplitude=amplitude,
-            num_samples=num_samples,
-            sample_rate=sample_rate,
-        )
-    else:
-        exact_cycle = _generate_sine_wave(
-            angular_frequency=angular_frequency,
-            amplitude=amplitude,
-            num_samples=min_samples,
-            sample_rate=sample_rate,
-        )
-        # Repeat one exact cycle until we reach requested num_samples
-        output = exact_cycle * math.ceil(num_samples / min_samples)
-        output = output[:num_samples]
-    # Map float values to integer values
-    max_signed = 2 ** (bits_per_sample) // 2 - 1
-    min_signed = ~max_signed
-    step_size = (max_signed - min_signed) / (1.0 - (-1.0))
-    output = [round((value - (-1.0)) * step_size + min_signed) for value in output]
-    # Convert final output to PCM WAVE data
-    wav_output = (i.to_bytes(bits_per_sample, "little", signed=True) for i in output)
-    # Duplicate data between channels
-    wav_output = b"".join(
-        data for value in wav_output for data in [value] * num_channels
+    exact_cycle = _generate_sine_wave(
+        angular_frequency=angular_frequency,
+        amplitude=amplitude,
+        num_samples=min_samples,
+        sample_rate=sample_rate,
     )
-    return wav_output
+    assert all(-1.0 <= value <= 1.0 for value in exact_cycle)
+    exact_cycle = _map_floats_to_ints(exact_cycle, bits_per_sample=bits_per_sample)
+    # Convert to PCM WAVE data bytes and repeat data for each channel
+    exact_cycle = (
+        i.to_bytes(bits_per_sample, "little", signed=True) for i in exact_cycle
+    )
+    exact_cycle = (
+        data for value in exact_cycle for data in itertools.repeat(value, num_channels)
+    )
+    output = itertools.islice(itertools.cycle(exact_cycle), num_samples * num_channels)
+    return output

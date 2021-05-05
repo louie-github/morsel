@@ -140,8 +140,9 @@ def generate_sine_wave(
     assert all(-1.0 <= value <= 1.0 for value in exact_cycle)
     exact_cycle = _map_floats_to_ints(exact_cycle, bits_per_sample=bits_per_sample)
     # Convert to PCM WAVE data bytes and repeat data for each channel
+    bytes_per_sample = bits_per_sample // 8
     exact_cycle = (
-        i.to_bytes(bits_per_sample, "little", signed=True) for i in exact_cycle
+        i.to_bytes(bytes_per_sample, "little", signed=True) for i in exact_cycle
     )
     exact_cycle = (
         data for value in exact_cycle for data in itertools.repeat(value, num_channels)

@@ -96,10 +96,10 @@ def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int):
 def _generate_sine_wave(
     *, angular_frequency: float, amplitude: float, num_samples: int, sample_rate: int
 ):
-    return [
+    return (
         amplitude * math.sin(angular_frequency * t / sample_rate)
         for t in range(num_samples)
-    ]
+    )
 
 
 def generate_sine_wave(
@@ -148,7 +148,6 @@ def generate_sine_wave(
         num_samples=min_samples,
         sample_rate=sample_rate,
     )
-    assert all(-1.0 <= value <= 1.0 for value in exact_cycle)
     # Convert raw float data to integer PCM data with interleaved channels
     exact_cycle = _map_floats_to_ints(exact_cycle, bits_per_sample=bits_per_sample)
     bytes_per_sample = bits_per_sample // 8

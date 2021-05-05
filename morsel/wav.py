@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import math
+import io
 import itertools
-from typing import Iterable, Iterator
+from typing import Iterable, Iterator, Optional
 
 # TODO: Add docstrings and __repr__() methods
 # Currently, this script only supports exporting s16le, s24le, and s32le
@@ -30,7 +31,7 @@ def generate_pcm_wave_file_header(
     num_channels: int = 2,
     sample_rate: int = 48000,
     bits_per_sample: int = 16,
-):
+) -> bytes:
     if bits_per_sample not in {16, 24, 32}:
         raise ValueError(
             " ".join(
@@ -82,15 +83,6 @@ def generate_pcm_wave_file_header(
     )
 
 
-def _generate_sine_wave(
-    *, angular_frequency: float, amplitude: float, num_samples: int, sample_rate: int
-):
-    return [
-        amplitude * math.sin(angular_frequency * t / sample_rate)
-        for t in range(num_samples)
-    ]
-
-
 def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int):
     max_signed = 2 ** (bits_per_sample - 1) - 1
     min_signed = ~max_signed
@@ -98,6 +90,15 @@ def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int):
     # above the minimum int value
     step_size = (max_signed - min_signed) / (1.0 - (-1.0))
     return (round((value - (-1.0)) * step_size + min_signed) for value in floats)
+
+
+def _generate_sine_wave(
+    *, angular_frequency: float, amplitude: float, num_samples: int, sample_rate: int
+):
+    return [
+        amplitude * math.sin(angular_frequency * t / sample_rate)
+        for t in range(num_samples)
+    ]
 
 
 def generate_sine_wave(
@@ -149,3 +150,53 @@ def generate_sine_wave(
     )
     output = itertools.islice(itertools.cycle(exact_cycle), num_samples * num_channels)
     return output
+
+
+class PCMWaveFileIO(io.BufferedIOBase):
+    def __init__(self, header: bytes, wave_data: Iterator[bytes]) -> None:
+        super().__init__()
+        self.header = header
+        self.wave_data = wave_data
+        self.iterator = iter(itertools.chain((header,), wave_data))
+        self.buffer = bytearray()
+
+    def read(self, size: int = -1) -> Optional[bytes]:
+        buffer = self.buffer
+        iterator = self.iterator
+        if size > 0:
+            try:
+                while len(buffer) < size:
+                    buffer.extend(next(iterator))
+            except StopIteration:
+                pass
+            ret = buffer[:size]
+            del buffer[:size]
+            return bytes(ret)
+        else:
+            return b"".join(iterator)
+
+    def readinto(self, buffer) -> int:
+        output = self.read(len(buffer))
+        buffer[: len(output)] = output
+        return len(output)
+
+    def seekable(self) -> bool:
+        return False
+
+    def writable(self) -> bool:
+        return False
+
+
+if __name__ == "__main__":
+    BUFSIZE = io.DEFAULT_BUFFER_SIZE
+
+    for i in range(100):
+        header = generate_pcm_wave_file_header(
+            num_samples=48000, num_channels=2, sample_rate=48000, bits_per_sample=16
+        )
+        data = generate_sine_wave(
+            num_samples=48000, num_channels=2, sample_rate=48000, bits_per_sample=16
+        )
+        wavf = PCMWaveFileIO(header=header, wave_data=data)
+        for _ in range(192):
+            x = wavf.read(1024)

@@ -350,21 +350,15 @@ def generate_sine_wave_file(
         allow_clipping=allow_clipping,
     )
     bytes_per_sample = bits_per_sample // 8
-    chunk_size = buffer_size // bytes_per_sample
+    samples_per_buffer = buffer_size // bytes_per_sample
     data_iter = iter(data)
     bytes_written = 0
     with open(filename, "wb") as f:
         bytes_written += f.write(header)
-        finished = False
-        while not finished:
-            buffer = bytearray()
-            for _ in repeat(None, chunk_size):
-                try:
-                    buffer.extend(next(data_iter))
-                except StopIteration:
-                    finished = True
-                    break
+        buffer = b"".join(islice(data_iter, samples_per_buffer))
+        while buffer:
             bytes_written += f.write(buffer)
+            buffer = b"".join(islice(data_iter, samples_per_buffer))
     return bytes_written
 
 
@@ -376,7 +370,7 @@ if __name__ == "__main__":
     import time
 
     BUFSIZE = io.DEFAULT_BUFFER_SIZE
-    filename = "test-5min-512hz-sr48khz-s24le-3.wav"
+    filename = "test-5min-512hz-sr48khz-s24le-3b.wav"
     frequency = 512
     sample_rate = 48000
     duration = 5 * 60 * sample_rate  # 5 minutes

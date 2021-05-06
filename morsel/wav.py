@@ -5,7 +5,7 @@ import math
 import io
 import itertools
 
-from typing import Iterable
+from typing import Iterable, Iterator
 
 # TODO: Add module docstrings, __repr__() methods, and unit tests
 
@@ -47,9 +47,11 @@ def generate_pcm_wave_file_header(
         num_samples (int):
             The number of samples in the PCM data.
         num_channels (int, optional):
-            The number of channels in the PCM data. Defaults to 2.
+            The number of channels in each sample of the PCM data.
+            Defaults to 2.
         sample_rate (int, optional):
-            The sample rate of the PCM data. Defaults to 48000.
+            The sample rate of the PCM data measured in cycles per
+            second or Hertz (Hz). Defaults to 48000.
         bits_per_sample (int, optional):
             The bit depth or number of bits per sample in the PCM data.
             Defaults to DEFAULT_BIT_DEPTH.
@@ -113,6 +115,10 @@ def generate_pcm_wave_file_header(
     )
 
 
+def _clamp_floats(floats: Iterable[float]):
+    return (max(min(value, 1.0), -1.0) for value in floats)
+
+
 def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int) -> Iterable[int]:
     """Maps float values in the range -1.0 to 1.0 to integer values.
 
@@ -136,10 +142,6 @@ def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int) -> Iterab
     # above the minimum int value
     step_size = (max_signed - min_signed) / (1.0 - (-1.0))
     return (round((value - (-1.0)) * step_size + min_signed) for value in floats)
-
-
-def _clamp_floats(floats: Iterable[float]):
-    return (max(min(value, 1.0), -1.0) for value in floats)
 
 
 def _generate_sine_wave(
@@ -217,7 +219,7 @@ def generate_sine_wave(
 
     Returns:
         Iterable[bytes]:
-            An iterable of the PCM data of the sine wave.
+            An iterable of bytes containing PCM data.
     """
     if bits_per_sample not in SUPPORTED_BIT_DEPTHS:
         raise ValueError(

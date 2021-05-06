@@ -186,6 +186,21 @@ def generate_sine_wave(
     fall outside the allowed range (-1.0 to 1.0) will be clamped to
     either -1.0 or 1.0, whichever is appropriate.
 
+    This functions generates samples for its sine wave function by
+    generating one "exact cycle" of the function, then repeating the
+    samples or data points of that "exact cycle" until the specified
+    number of samples is reached.
+
+    An "exact cycle" is the shortest number of cycles of a sine wave
+    function whose duration can be represented exactly by the specified
+    sample rate.
+
+    For example, a 14Hz sine wave at a 48kHz sample rate needs to cycle
+    7 times before it reaches a duration (7/14 = 1/2 second) that can
+    be represented exactly by the sample rate (1/2 = 24 000/48 000).
+
+    This avoids unnecessary calculations and extra rounding errors.
+
     Args:
         frequency (int, optional):
             The frequency of the sine wave in cycles per second or
@@ -239,15 +254,13 @@ def generate_sine_wave(
                 )
             )
         )
-    # Algorithm: Calculate the minimum amount of cycles whose duration
-    # can be represented exactly by the given sample rate.
-    # This avoids extra rounding errors and is faster. Otherwise, values
-    # that map to 0 might instead map to -1 due to said errors.
+    # "Exact cycle" algorithm
+    # TODO: Research the correct terms to use. I'm not sure if "cycle"
+    # is the correct term to us here.
     min_cycles = frequency // gcd(frequency, sample_rate)
+    # Convert duration of exact cycle to duration in sample rate
     min_samples = sample_rate * min_cycles // frequency
-    # Don't generate extra samples if duration is shorter than minimum
-    # exactly representable duration
-    min_samples = min(min_samples, num_samples)
+    min_samples = min_samples if min_samples < num_samples else num_samples
     angular_frequency = 2 * pi * frequency
     exact_cycle = _generate_sine_wave(
         angular_frequency=angular_frequency,
@@ -258,6 +271,9 @@ def generate_sine_wave(
     if allow_clipping:
         exact_cycle = _clamp_floats(exact_cycle)
     exact_cycle = _map_floats_to_ints(exact_cycle, bits_per_sample=bits_per_sample)
+    # TODO: Speed up code by pre-converting exact_cycle into bytes then
+    # repeating that data in an iterator rather than this current
+    # implementation which returns small bytes objects.
     bytes_per_sample = bits_per_sample // 8
     exact_cycle = (
         i.to_bytes(bytes_per_sample, "little", signed=True) for i in exact_cycle
@@ -370,7 +386,7 @@ if __name__ == "__main__":
     import time
 
     BUFSIZE = io.DEFAULT_BUFFER_SIZE
-    filename = "test-5min-512hz-sr48khz-s24le-3b.wav"
+    filename = "test-5min-512hz-sr48khz-s24le.wav"
     frequency = 512
     sample_rate = 48000
     duration = 5 * 60 * sample_rate  # 5 minutes

@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import math
-import io
-import itertools
-
+from math import gcd, pi, sin
+from itertools import cycle, islice, repeat
 from typing import Iterable, Iterator
 
 # TODO: Add module docstrings, __repr__() methods, and unit tests
@@ -111,8 +109,8 @@ def generate_pcm_wave_file_header(
             bits_per_sample,
             subchunk_2_id,
             subchunk_2_size,
-        )
-    )
+                )
+            )
 
 
 def _clamp_floats(floats: Iterable[float]):
@@ -167,8 +165,7 @@ def _generate_sine_wave(
             The generated samples of the sine wave function.
     """
     return (
-        amplitude * math.sin(angular_frequency * t / sample_rate)
-        for t in range(num_samples)
+        amplitude * sin(angular_frequency * t / sample_rate) for t in range(num_samples)
     )
 
 
@@ -246,12 +243,12 @@ def generate_sine_wave(
     # can be represented exactly by the given sample rate.
     # This avoids extra rounding errors and is faster. Otherwise, values
     # that map to 0 might instead map to -1 due to said errors.
-    min_cycles = frequency // math.gcd(frequency, sample_rate)
+    min_cycles = frequency // gcd(frequency, sample_rate)
     min_samples = sample_rate * min_cycles // frequency
     # Don't generate extra samples if duration is shorter than minimum
     # exactly representable duration
     min_samples = min(min_samples, num_samples)
-    angular_frequency = 2 * math.pi * frequency
+    angular_frequency = 2 * pi * frequency
     exact_cycle = _generate_sine_wave(
         angular_frequency=angular_frequency,
         amplitude=amplitude,
@@ -268,9 +265,9 @@ def generate_sine_wave(
     exact_cycle = (
         channel_data
         for data in exact_cycle
-        for channel_data in itertools.repeat(data, num_channels)
+        for channel_data in repeat(data, num_channels)
     )
-    output = itertools.islice(itertools.cycle(exact_cycle), num_samples * num_channels)
+    output = islice(cycle(exact_cycle), num_samples * num_channels)
     return output
 
 
@@ -343,7 +340,7 @@ def generate_sine_wave_file(
         finished = False
         while not finished:
             buffer = bytearray()
-            for _ in itertools.repeat(None, chunk_size):
+            for _ in repeat(None, chunk_size):
                 try:
                     buffer.extend(next(data_iter))
                 except StopIteration:
@@ -357,6 +354,7 @@ def generate_sine_wave_file(
 
 
 if __name__ == "__main__":
+    import io
     import time
 
     BUFSIZE = io.DEFAULT_BUFFER_SIZE

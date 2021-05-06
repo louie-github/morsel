@@ -142,40 +142,10 @@ def _clamp_floats(floats: Iterable[float]):
     return (max(min(value, 1.0), -1.0) for value in floats)
 
 
-def _ints_to_pcm_wave(
-    int_data: Iterable[int], *, bits_per_sample: int, num_channels: int
-) -> Iterable[bytes]:
-    """
-    Converts raw integer data to PCM data with interleaved channels.
-
-    If *num_channels* is given, *int_data* will be repeated and used to
-    fill all channels, so each data point will be repeated
-    *num_channels* times (each sample has interleaved channel data).
-
-    Args:
-        int_data (Iterable[int]):
-            The raw integer data.
-        bits_per_sample (int):
-            The bit depth of the PCM data.
-        num_channels (int):
-            The number of channels in the PCM data.
-
-    Returns:
-        Iterable[bytes]:
-            An iterable with the resulting PCM data.
-    """
-    bytes_per_sample = bits_per_sample // 8
-    output = (i.to_bytes(bytes_per_sample, "little", signed=True) for i in int_data)
-    output = (
-        data for value in output for data in itertools.repeat(value, num_channels)
-    )
-    return output
-
-
 def _generate_sine_wave(
     *, angular_frequency: float, amplitude: float, num_samples: int, sample_rate: int
 ) -> Iterable[float]:
-    """Generates samples of a sine wave function for PCM data.
+    """Generates samples of a sine wave function.
 
     Args:
         angular_frequency (float):
@@ -211,11 +181,11 @@ def generate_sine_wave(
     allow_clipping=True,
 ) -> Iterable[bytes]:
     """Generates PCM data for a sine wave.
+    All channels are filled with the same data.
 
-    If `allow_clipping = True`, then any floating point values
-    generated in the inner sine wave function that fall outside the
-    range (-1.0 to 1.0) will be clamped to either -1.0 or 1.0,
-    whichever is appropriate.
+    If `allow_clipping = True`, then any floating point values that
+    fall outside the allowed range (-1.0 to 1.0) will be clamped to
+    either -1.0 or 1.0, whichever is appropriate.
 
     Args:
         frequency (int, optional):
@@ -289,8 +259,14 @@ def generate_sine_wave(
     if allow_clipping:
         exact_cycle = _clamp_floats(exact_cycle)
     exact_cycle = _map_floats_to_ints(exact_cycle, bits_per_sample=bits_per_sample)
-    exact_cycle = _ints_to_pcm_wave(
-        exact_cycle, bits_per_sample=bits_per_sample, num_channels=num_channels
+    bytes_per_sample = bits_per_sample // 8
+    exact_cycle = (
+        i.to_bytes(bytes_per_sample, "little", signed=True) for i in exact_cycle
+    )
+    exact_cycle = (
+        channel_data
+        for data in exact_cycle
+        for channel_data in itertools.repeat(data, num_channels)
     )
     output = itertools.islice(itertools.cycle(exact_cycle), num_samples * num_channels)
     return output
@@ -308,7 +284,7 @@ def generate_sine_wave_file(
     bits_per_sample: int = DEFAULT_BIT_DEPTH,
     allow_clipping=True,
 ) -> int:
-    """Generate a PCM WAVE (.wav) file containing a sine wave.
+    """Generates a PCM WAVE (.wav) file containing a sine wave.
 
     See `generate_sine_wave()` for more details.
 

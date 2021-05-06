@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from math import gcd, pi, sin
-from itertools import cycle, islice, repeat
+from itertools import chain, repeat
 from typing import Iterable, Iterator
 
 # TODO: Add module docstrings, __repr__() methods, and unit tests
@@ -178,9 +178,13 @@ def generate_sine_wave(
     sample_rate: int = 48000,
     bits_per_sample: int = DEFAULT_BIT_DEPTH,
     allow_clipping=True,
-) -> Iterable[bytes]:
+) -> Iterator[bytes]:
     """Generates PCM data for a sine wave.
     All channels are filled with the same data.
+
+    Each element of the iterator output is one "exact cycle" converted
+    into PCM data, except for the last cycle which may be cut off early
+    to meet the specified *num_samples*.
 
     If `allow_clipping = True`, then any floating point values that
     fall outside the allowed range (-1.0 to 1.0) will be clamped to
@@ -230,8 +234,8 @@ def generate_sine_wave(
             was not allowed.
 
     Returns:
-        Iterable[bytes]:
-            An iterable of bytes containing PCM data.
+        Iterator[bytes]:
+            An iterator of bytes objects containing PCM data.
     """
     if bits_per_sample not in SUPPORTED_BIT_DEPTHS:
         raise ValueError(
@@ -271,9 +275,6 @@ def generate_sine_wave(
     if allow_clipping:
         exact_cycle = _clamp_floats(exact_cycle)
     exact_cycle = _map_floats_to_ints(exact_cycle, bits_per_sample=bits_per_sample)
-    # TODO: Speed up code by pre-converting exact_cycle into bytes then
-    # repeating that data in an iterator rather than this current
-    # implementation which returns small bytes objects.
     bytes_per_sample = bits_per_sample // 8
     exact_cycle = (
         i.to_bytes(bytes_per_sample, "little", signed=True) for i in exact_cycle
@@ -283,7 +284,11 @@ def generate_sine_wave(
         for data in exact_cycle
         for channel_data in repeat(data, num_channels)
     )
-    output = islice(cycle(exact_cycle), num_samples * num_channels)
+    exact_cycle_bytes = b"".join(exact_cycle)
+    repetitions, last_cycle_samples = divmod(num_samples, min_samples)
+    last_cycle_bytes = exact_cycle_bytes[:last_cycle_samples]
+    # Append last_cycle_bytes onto the exact_cycle_bytes repetitions
+    output = chain(repeat(exact_cycle_bytes, repetitions), (last_cycle_bytes,))
     return output
 
 
@@ -365,16 +370,11 @@ def generate_sine_wave_file(
         bits_per_sample=bits_per_sample,
         allow_clipping=allow_clipping,
     )
-    bytes_per_sample = bits_per_sample // 8
-    samples_per_buffer = buffer_size // bytes_per_sample
-    data_iter = iter(data)
     bytes_written = 0
     with open(filename, "wb") as f:
         bytes_written += f.write(header)
-        buffer = b"".join(islice(data_iter, samples_per_buffer))
-        while buffer:
+        for buffer in data:
             bytes_written += f.write(buffer)
-            buffer = b"".join(islice(data_iter, samples_per_buffer))
     return bytes_written
 
 

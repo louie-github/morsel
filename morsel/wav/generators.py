@@ -8,7 +8,7 @@ from typing import Iterable, Iterator
 from .wavefile import (
     DEFAULT_BIT_DEPTH,
     SUPPORTED_BIT_DEPTHS,
-    generate_pcm_wave_file_header,
+    PCMWaveFileHeader,
 )
 
 # TODO: Add module docstrings, __repr__() methods, and unit tests
@@ -80,8 +80,8 @@ def generate_sine_wave(
     bits_per_sample: int = DEFAULT_BIT_DEPTH,
     allow_clipping=True,
 ) -> Iterator[bytes]:
-    """Generates PCM data for a sine wave.
-    All channels are filled with the same data.
+    """Generates PCM data for a sine wave. All channels are filled with
+    the same data.
 
     Each element of the iterator output is one "exact cycle" converted
     into PCM data, except for the last cycle which may be cut off early
@@ -252,12 +252,12 @@ def generate_sine_wave_file(
         int:
             The number of bytes written.
     """
-    header = generate_pcm_wave_file_header(
+    header = PCMWaveFileHeader(
         num_samples=num_samples,
         num_channels=num_channels,
         sample_rate=sample_rate,
         bits_per_sample=bits_per_sample,
-    )
+    ).to_bytes()
     data = generate_sine_wave(
         frequency=frequency,
         amplitude=amplitude,

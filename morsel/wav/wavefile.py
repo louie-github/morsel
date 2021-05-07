@@ -149,8 +149,8 @@ class PCMWaveFileHeader(object):
         header_chunk_size      = _int_to_riff(self.chunk_size, 4)
         header_format_         = self.format_
         header_subchunk_1_id   = self.subchunk_1_id
-        header_subchunk_1_size = _int_to_riff(16, 4)
-        header_audio_format    = _int_to_riff(1, 2)  # PCM = 1
+        header_subchunk_1_size = _int_to_riff(self.subchunk_1_size, 4)
+        header_audio_format    = _int_to_riff(self.audio_format, 2)  # PCM = 1
         header_num_channels    = _int_to_riff(self.num_channels, 2)
         header_sample_rate     = _int_to_riff(self.sample_rate, 4)
         header_byte_rate       = _int_to_riff(self.byte_rate, 4)

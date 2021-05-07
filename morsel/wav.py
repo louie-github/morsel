@@ -258,6 +258,11 @@ def generate_sine_wave(
                 )
             )
         )
+    if frequency > (sample_rate // 2):
+        raise ValueError(
+            f"Given frequency {frequency}Hz cannot be represented "
+            f"with sample rate {sample_rate}Hz"
+        )
     # "Exact cycle" algorithm
     # TODO: Research the correct terms to use. I'm not sure if "cycle"
     # is the correct term to us here.

@@ -222,7 +222,8 @@ def generate_sine_wave(
             The bit depth / number of bits per sample in the PCM data.
             Defaults to DEFAULT_BIT_DEPTH.
         allow_clipping (bool, optional):
-            Whether to allow clipping of output values. Defaults to True.
+            Whether to allow clipping of output values. Defaults to
+            True.
 
     Raises:
         ValueError:
@@ -239,28 +240,20 @@ def generate_sine_wave(
     """
     if bits_per_sample not in SUPPORTED_BIT_DEPTHS:
         raise ValueError(
-            " ".join(
-                (
-                    "Bit depths other than 16, 24, or 32 are currently",
-                    f"not supported (requested {bits_per_sample})",
-                )
-            )
+            "Bit depths other than 16, 24, or 32 are currently not supported "
+            + f"(requested {bits_per_sample})"
         )
     if amplitude < 0.0:
         raise ValueError("Given amplitude {amplitude} is smaller than 0.0.")
     elif amplitude > 1.0 and not allow_clipping:
         raise ValueError(
-            " ".join(
-                (
-                    f"Given amplitude {amplitude} is larger than 1.0",
-                    "and clipping was not allowed.",
-                )
-            )
+            f"Given amplitude {amplitude} is larger than 1.0 and clipping was "
+            + "not allowed."
         )
     if frequency > (sample_rate // 2):
         raise ValueError(
-            f"Given frequency {frequency}Hz cannot be represented "
-            f"with sample rate {sample_rate}Hz"
+            f"Given frequency {frequency}Hz cannot be represented with sample "
+            + f"rate {sample_rate}Hz"
         )
     # "Exact cycle" algorithm
     # TODO: Research the correct terms to use. I'm not sure if "cycle"

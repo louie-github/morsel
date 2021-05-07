@@ -41,6 +41,45 @@ class PCMWaveFileHeader(object):
         bits_per_sample (int):
             The bit depth or number of bits per sample in the PCM data.
             Defaults to DEFAULT_BIT_DEPTH.
+        chunk_id (bytes):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        chunk_size (int):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        format_ (bytes):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        subchunk_1_id (bytes):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        subchunk_1_size (typ):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        audio_format (int):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        num_channels (int):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        sample_rate (int):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        byte_rate (int):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        block_align (int):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        bits_per_sample (int):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        subchunk_2_id (bytes):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
+        subchunk_2_size (int):
+            The corresponding RIFF field data (before conversion to
+            bytes, if not already)
     """
 
     def __init__(

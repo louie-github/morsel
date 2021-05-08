@@ -37,8 +37,8 @@ def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int) -> Iterab
     """
     max_signed = 2 ** (bits_per_sample - 1) - 1
     min_signed = ~max_signed
-    # Every x increase from the minimum float value maps to this value
-    # above the minimum int value
+    # Every `x` increase above the minimum float value maps to an
+    # `x * step_size` increase above the minimum int value
     step_size = (max_signed - min_signed) / (1.0 - (-1.0))
     return (round((value - (-1.0)) * step_size + min_signed) for value in floats)
 

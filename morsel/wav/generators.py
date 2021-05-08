@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from math import gcd, pi, sin
-from itertools import chain, islice, repeat
+from itertools import chain, repeat
 from typing import BinaryIO, Iterable, Iterator
 
 from .wavefile import (
@@ -12,6 +12,24 @@ from .wavefile import (
 )
 
 # TODO: Add module docstrings, __repr__() methods, and unit tests
+
+
+class PCMDataGenerator(object):
+    def __init__(self, cycle_data: bytes, cycles: int, last_cycle: bytes = b"") -> None:
+        self.cycle_data = cycle_data
+        self.cycles = cycles
+        self.last_cycle = last_cycle
+
+    def buffer(self, max_bufsize: int) -> Iterator[bytes]:
+        cycles_per_buffer = max_bufsize // len(self.cycle_data)
+        cycles_per_buffer = min(self.cycles, cycles_per_buffer)
+        buffer_data = self.cycle_data * cycles_per_buffer
+        buffer_cycles, extra_cycles = divmod(self.cycles, cycles_per_buffer)
+        # We could also add the last cycle to the extra_cycles buffer
+        # data, but that would add a lot more unnecessary code to check
+        # that it stays under the specified maximum buffer size.
+        extra_data = self.cycle_data * extra_cycles
+        return chain(repeat(buffer_data, buffer_cycles), (extra_data, self.last_cycle))
 
 
 def _clamp_floats(floats: Iterable[float]):
@@ -79,7 +97,7 @@ def generate_sine_wave(
     sample_rate: int = 48000,
     bits_per_sample: int = DEFAULT_BIT_DEPTH,
     allow_clipping=True,
-) -> Iterator[bytes]:
+) -> PCMDataGenerator:
     """Generates PCM data for a sine wave. All channels are filled with
     the same data.
 
@@ -195,7 +213,7 @@ def generate_sine_wave(
     # TODO: Allow to get the last cycle separately for more efficient
     #       buffering when writing to files (repeat exact_cycle, join,
     #       then copy that joined buffer)
-    output = chain(repeat(exact_cycle_bytes, repetitions), (last_cycle_bytes,))
+    output = PCMDataGenerator(exact_cycle_bytes, repetitions, last_cycle_bytes)
     return output
 
 
@@ -277,21 +295,9 @@ def write_sine_wave_wav_file(
         allow_clipping=allow_clipping,
     )
     bytes_written = 0
-    first_cycle_data = next(data)
-    cycle_len = len(first_cycle_data)
-    cycles_per_buffer = buffer_size // cycle_len
-
     bytes_written += fp.write(header)
-    if cycles_per_buffer <= 1:
-        # Large element size, so we don't have to manually buffer
-        bytes_written += fp.write(first_cycle_data)
-        for cycle_data in data:
-            bytes_written += fp.write(cycle_data)
-    else:
-        buffer = first_cycle_data
-        while buffer:
-            bytes_written += fp.write(buffer)
-            buffer = b"".join(islice(data, cycles_per_buffer))
+    for buffer in data.buffer(max_bufsize=buffer_size):
+        bytes_written += fp.write(buffer)
     return bytes_written
 
 
@@ -303,8 +309,8 @@ def _test_sine():
     import time
 
     buffer_size = io.DEFAULT_BUFFER_SIZE
-    filename = "test-5min-512khz-sr48khz-s24le-2.wav"
-    frequency = 512
+    filename = "test-5min-12khz-sr48khz-s24le-pcmdatagen.wav"
+    frequency = 12_000
     sample_rate = 48000
     duration = 5 * 60 * sample_rate  # 5 minutes
     bit_depth = 24

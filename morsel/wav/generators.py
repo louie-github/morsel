@@ -83,13 +83,13 @@ def generate_sine_wave(
     """Generates PCM data for a sine wave. All channels are filled with
     the same data.
 
-    Each element of the iterator output is one "exact cycle" converted
-    into PCM data, except for the last cycle which may be cut off early
-    to meet the specified *num_samples*.
-
     If `allow_clipping = True`, then any floating point values that
     fall outside the allowed range (-1.0 to 1.0) will be clamped to
     either -1.0 or 1.0, whichever is appropriate.
+
+    Each element of the iterator output is one "exact cycle" converted
+    into PCM data, except for the last cycle which may be cut off early
+    to meet the specified *num_samples*.
 
     This functions generates samples for its sine wave function by
     generating one "exact cycle" of the function, then repeating the
@@ -134,6 +134,9 @@ def generate_sine_wave(
         ValueError:
             An amplitude larger than 1.0 was specified while clipping
             was not allowed.
+        ValueError:
+            A frequency was specified that cannot be represented with
+            the given sample rate.
 
     Returns:
         Iterator[bytes]:

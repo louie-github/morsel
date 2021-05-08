@@ -6,8 +6,8 @@ def test_sine():
     import time
 
     buffer_size = io.DEFAULT_BUFFER_SIZE
-    filename = "test-5min-12khz-sr48khz-s24le-pcmdatagen.wav"
-    frequency = 12_000
+    filename = "test-5min-512hz-sr48khz-s24le-pcmdatagen.wav"
+    frequency = 512
     sample_rate = 48000
     duration = 5 * 60 * sample_rate  # 5 minutes
     bit_depth = 24

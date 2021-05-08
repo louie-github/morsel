@@ -154,7 +154,7 @@ def generate_sine_wave(
             f"Given amplitude {amplitude} is larger than 1.0 and clipping was "
             + "not allowed."
         )
-    if frequency > (sample_rate // 2):
+    if frequency > (sample_rate / 2):
         raise ValueError(
             f"Given frequency {frequency}Hz cannot be represented with sample "
             + f"rate {sample_rate}Hz"

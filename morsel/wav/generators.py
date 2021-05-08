@@ -22,14 +22,19 @@ class PCMDataGenerator(object):
 
     def buffer(self, max_bufsize: int) -> Iterator[bytes]:
         cycles_per_buffer = max_bufsize // len(self.cycle_data)
+        if cycles_per_buffer <= 1:
+            # Do not bother buffering, return the cycles as they are
+            return chain(repeat(self.cycle_data, self.cycles), (self.last_cycle,))
         cycles_per_buffer = min(self.cycles, cycles_per_buffer)
         buffer_data = self.cycle_data * cycles_per_buffer
         buffer_cycles, extra_cycles = divmod(self.cycles, cycles_per_buffer)
         # We could also add the last cycle to the extra_cycles buffer
         # data, but that would add a lot more unnecessary code to check
         # that it stays under the specified maximum buffer size.
-        extra_data = self.cycle_data * extra_cycles
-        return chain(repeat(buffer_data, buffer_cycles), (extra_data, self.last_cycle))
+        extra_cycle_data = self.cycle_data * extra_cycles
+        return chain(
+            repeat(buffer_data, buffer_cycles), (extra_cycle_data, self.last_cycle)
+        )
 
 
 def _clamp_floats(floats: Iterable[float]):

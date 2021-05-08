@@ -142,7 +142,13 @@ class PCMWaveFileHeader(object):
         self.subchunk_2_size = subchunk_2_size
         # fmt: on
 
-    def to_bytes(self):
+    def to_bytes(self) -> bytes:
+        """Converts a PCMWaveFileHeader instance to a bytes object.
+
+        Returns:
+            bytes:
+                The converted PCMWaveFileHeader instance.
+        """
         # Set RIFF fields
         # fmt: off
         header_chunk_id        = self.chunk_id

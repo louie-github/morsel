@@ -1,4 +1,4 @@
-from .generators import write_sine_wave_wav_file
+from .wav import write_sine_wave_wav_file
 
 
 def test_sine():

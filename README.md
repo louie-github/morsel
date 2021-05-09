@@ -17,7 +17,8 @@ If you want to help with development, feel free to open an [issue](https://githu
 See [Contributing](##contributing) for more details.
 
  - [ ] Morse code translation capabilities
- - [X] PCM WAVE (.wav) file format support (export capabilities)
+ - [X] PCM WAVE (.wav) file format support
+ - [ ] Audio export capabilities for Morse code translation
  - [ ] Documentation
  - [ ] Package code for PyPI
 

@@ -32,7 +32,7 @@ def _int_to_riff(i: int, length: int) -> bytes:
     return i.to_bytes(length, "little", signed=False)
 
 
-def generate_pcm_wave_header(
+def generate_pcm_wav_header(
     *,
     num_samples: int,
     num_channels: int = 2,
@@ -330,8 +330,7 @@ def write_sine_wave_wav_file(
     bits_per_sample: int = DEFAULT_BIT_DEPTH,
     allow_clipping=True,
 ) -> int:
-    """Writes the data for a PCM WAVE (.wav) file containing a sine
-    wave.
+    """Writes the data for a PCM WAV (.wav) file containing a sine wave.
 
     See `generate_sine_wave()` for more details on generating the sine
     wave data.
@@ -380,7 +379,7 @@ def write_sine_wave_wav_file(
         int:
             The number of bytes written.
     """
-    header = generate_pcm_wave_header(
+    header = generate_pcm_wav_header(
         num_samples=num_samples,
         num_channels=num_channels,
         sample_rate=sample_rate,

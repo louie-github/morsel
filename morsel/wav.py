@@ -133,6 +133,19 @@ class PCMDataGenerator(object):
         )
 
 
+# Generators for PCM data (wave functions, silence, etc.)
+
+
+def generate_silence(
+    num_samples: int,
+    num_channels: int = 2,
+    bits_per_sample: int = DEFAULT_BIT_DEPTH,
+    **kwargs,
+):
+    cycle_data = (0).to_bytes(length=bits_per_sample, byteorder="little", signed=True)
+    return PCMDataGenerator(cycle_data=cycle_data, cycles=num_samples * num_channels)
+
+
 def _clamp_floats(floats: Iterable[float]):
     return (max(min(value, 1.0), -1.0) for value in floats)
 
@@ -279,11 +292,6 @@ def generate_sine_wave(
             + f"rate {sample_rate}Hz"
         )
     # "Exact cycle" algorithm
-    # TODO: Research the correct terms to use. I'm not sure if "cycle"
-    #       is the correct term to us here.
-    # NOTE: `min_samples = sample_rate // gcd(frequency, sample_rate)``
-    #       could also work, and in one step, but this two-step process
-    #       helps to visualize the process. Keeping for readability.
     min_cycles = frequency // gcd(frequency, sample_rate)
     # Convert duration of exact cycle to duration in sample rate
     min_samples = sample_rate * min_cycles // frequency
@@ -295,8 +303,7 @@ def generate_sine_wave(
         num_samples=min_samples,
         sample_rate=sample_rate,
     )
-    if allow_clipping:
-        exact_cycle = _clamp_floats(exact_cycle)
+    exact_cycle = _clamp_floats(exact_cycle)
     exact_cycle = _map_floats_to_ints(exact_cycle, bits_per_sample=bits_per_sample)
     bytes_per_sample = bits_per_sample // 8
     exact_cycle = (
@@ -310,10 +317,6 @@ def generate_sine_wave(
     exact_cycle_bytes = b"".join(exact_cycle)
     repetitions, last_cycle_samples = divmod(num_samples, min_samples)
     last_cycle_bytes = exact_cycle_bytes[:last_cycle_samples]
-    # Append last_cycle_bytes onto the exact_cycle_bytes repetitions
-    # TODO: Allow to get the last cycle separately for more efficient
-    #       buffering when writing to files (repeat exact_cycle, join,
-    #       then copy that joined buffer)
     output = PCMDataGenerator(exact_cycle_bytes, repetitions, last_cycle_bytes)
     return output
 
@@ -399,13 +402,3 @@ def write_sine_wave_wav_file(
     for buffer in data.buffer(max_bufsize=buffer_size):
         bytes_written += fp.write(buffer)
     return bytes_written
-
-
-def generate_silence(
-    num_samples: int,
-    num_channels: int = 2,
-    bits_per_sample: int = DEFAULT_BIT_DEPTH,
-    **kwargs,
-):
-    cycle_data = (0).to_bytes(length=bits_per_sample, byteorder="little", signed=True)
-    return PCMDataGenerator(cycle_data=cycle_data, cycles=num_samples * num_channels)

@@ -402,4 +402,11 @@ def write_sine_wave_wav_file(
     return bytes_written
 
 
-# TODO: Add generate_silence
+def generate_silence(
+    num_samples: int,
+    num_channels: int = 2,
+    bits_per_sample: int = DEFAULT_BIT_DEPTH,
+    **kwargs,
+):
+    cycle_data = (0).to_bytes(length=bits_per_sample, byteorder="little", signed=True)
+    return PCMDataGenerator(cycle_data=cycle_data, cycles=num_samples * num_channels)

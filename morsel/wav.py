@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import io
+
 from math import gcd, pi, sin
 from itertools import chain, repeat
 from typing import BinaryIO, Iterable, Iterator
@@ -321,6 +323,16 @@ def generate_sine_wave(
     return output
 
 
+# Writer functions for PCM data generators
+def write_pcm_generator(
+    data: PCMDataGenerator, fp: BinaryIO, max_bufsize: int = io.DEFAULT_BUFFER_SIZE
+) -> int:
+    bytes_written = 0
+    for buffer in data.buffer(max_bufsize):
+        bytes_written = fp.write(buffer)
+    return bytes_written
+
+
 def write_sine_wave_wav_file(
     fp: BinaryIO,
     buffer_size: int = 8192,
@@ -399,6 +411,5 @@ def write_sine_wave_wav_file(
     )
     bytes_written = 0
     bytes_written += fp.write(header)
-    for buffer in data.buffer(max_bufsize=buffer_size):
-        bytes_written += fp.write(buffer)
+    bytes_written += write_pcm_generator(data, fp, max_bufsize=buffer_size)
     return bytes_written

@@ -306,20 +306,20 @@ def generate_sine_wave(
         sample_rate=sample_rate,
     )
     exact_cycle = _clamp_floats(exact_cycle)
-    exact_cycle = _map_floats_to_ints(exact_cycle, bits_per_sample=bits_per_sample)
+    exact_cycle_ints = _map_floats_to_ints(exact_cycle, bits_per_sample=bits_per_sample)
     bytes_per_sample = bits_per_sample // 8
-    exact_cycle = (
-        i.to_bytes(bytes_per_sample, "little", signed=True) for i in exact_cycle
+    exact_cycle_bytes = (
+        i.to_bytes(bytes_per_sample, "little", signed=True) for i in exact_cycle_ints
     )
-    exact_cycle = (
+    exact_cycle_bytes = (
         channel_data
-        for data in exact_cycle
+        for data in exact_cycle_bytes
         for channel_data in repeat(data, num_channels)
     )
-    exact_cycle_bytes = b"".join(exact_cycle)
+    exact_cycle_data = b"".join(exact_cycle_bytes)
     repetitions, last_cycle_samples = divmod(num_samples, min_samples)
-    last_cycle_bytes = exact_cycle_bytes[:last_cycle_samples]
-    output = PCMDataGenerator(exact_cycle_bytes, repetitions, last_cycle_bytes)
+    last_cycle_bytes = exact_cycle_data[:last_cycle_samples]
+    output = PCMDataGenerator(exact_cycle_data, repetitions, last_cycle_bytes)
     return output
 
 

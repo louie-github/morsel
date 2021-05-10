@@ -43,7 +43,7 @@ LETTER_SPACE_LENGTH = 1 * DOT_LENGTH
 WORD_SPACE_LENGTH = 1 * DOT_LENGTH
 
 
-def encode(
+def _encode(
     text: Iterable[str],
     mapping: Mapping[str, str] = INTERNATIONAL_MORSE_CODE,
     placeholder: str = PLACEHOLDER,
@@ -52,22 +52,23 @@ def encode(
     whitespace=WHITESPACE,
 ):
     text = "".join(text).casefold()
-    output = []
-    current_word: List[str] = []
     for character in text:
         if character in whitespace:
-            output.append(" ".join(current_word))
-            current_word = []
-        else:
-            encoded_character = mapping.get(character, None)
-            if encoded_character is None:
-                if error_on_invalid:
-                    raise KeyError(
-                        f"Character {encoded_character} could not be "
-                        "found in the given Morse code mapping."
-                    )
-                else:
-                    encoded_character = placeholder
-            current_word.append(encoded_character)
-    output.append(" ".join(current_word))
-    return f" {word_separator} ".join(output)
+            yield word_separator
+            continue
+        encoded_character = mapping.get(character, None)
+        if encoded_character is None:
+            if error_on_invalid:
+                raise KeyError(
+                    f"Character {encoded_character} could not be "
+                    "found in the given Morse code mapping."
+                )
+            else:
+                encoded_character = placeholder
+        yield encoded_character
+
+
+def encode(*args, join=True, **kwargs):
+    output = _encode(*args, **kwargs)
+    output = " ".join(output) if join else output
+    return output

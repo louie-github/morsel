@@ -47,18 +47,22 @@ def _encode(
     text: Iterable[str],
     mapping: Mapping[str, str] = INTERNATIONAL_MORSE_CODE,
     placeholder: str = PLACEHOLDER,
-    error_on_invalid=False,
+    error_on_invalid: bool = False,
     word_separator: str = WORD_SEPARATOR,
     whitespace=WHITESPACE,
 ):
     text = "".join(text).casefold()
+    word_separator = f" {word_separator} "
     for character in text:
-        if character in whitespace:
-            yield word_separator
-            continue
+        # Assume that character is valid, then check for whitespace.
+        # It should be faster to check for whitespace _after_ trying
+        # to translate the character rather than _before_ if the
+        # majority of characters are valid and translatable.
         encoded_character = mapping.get(character, None)
         if encoded_character is None:
-            if error_on_invalid:
+            if character in whitespace:
+                encoded_character = word_separator
+            elif error_on_invalid:
                 raise KeyError(
                     f"Character {encoded_character} could not be "
                     "found in the given Morse code mapping."

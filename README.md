@@ -12,14 +12,18 @@ This package is currently under development and is incomplete.
 
 Below is a checklist of the current development goals along with their
 corresponding completion status.
-
-If you want to help with development, feel free to open an [issue](https://github.com/louie-github/morsel/issues) or [pull request](https://github.com/louie-github/morsel/pulls)!
+If you want to help with development, feel free to open an
+[issue](https://github.com/louie-github/morsel/issues) or 
+[pull request](https://github.com/louie-github/morsel/pulls)!
 See [Contributing](##contributing) for more details.
 
  - [ ] Morse code translation capabilities
+   - [X] Encode (Text to Morse code)
+   - [ ] Decode (Morse code to text)
  - [X] PCM WAVE (.wav) file format support
  - [ ] Audio export capabilities for Morse code translation
  - [ ] Documentation
+ - [ ] Unit tests
  - [ ] Package code for PyPI
 
 

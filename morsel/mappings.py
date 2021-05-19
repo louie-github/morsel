@@ -81,6 +81,7 @@ INTERNATIONAL_MORSE_CODE_EXTRA = _casefold_dict(
 )
 
 # Dicts should be casefolded by now.
+# TODO: Replace with dict union in Python 3.9
 INTERNATIONAL_MORSE_CODE_FULL = {
     **INTERNATIONAL_MORSE_CODE,
     **INTERNATIONAL_MORSE_CODE_EXTRA,

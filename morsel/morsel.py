@@ -4,11 +4,10 @@
 import string
 
 from fractions import Fraction
-from typing import Iterable, List, Mapping, Union
+from typing import Iterable, Mapping
 
 from .mappings import (
     INTERNATIONAL_MORSE_CODE,
-    INTERNATIONAL_MORSE_CODE_FULL,
 )
 
 """

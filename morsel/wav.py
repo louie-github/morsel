@@ -62,12 +62,8 @@ def generate_pcm_wav_header(
     """
     if bits_per_sample not in SUPPORTED_BIT_DEPTHS:
         raise ValueError(
-            " ".join(
-                (
-                    "Bit depths other than 16, 24, or 32 are currently",
-                    f"not supported (requested {bits_per_sample})",
-                )
-            )
+            "Bit depths other than 16, 24, or 32 are currently "
+            f"not supported (requested {bits_per_sample})"
         )
     # TODO: Add error-checking (validation) for values such as
     # bounds checking, and multiple-of-8 verification.

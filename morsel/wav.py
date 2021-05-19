@@ -134,6 +134,9 @@ class PCMDataGenerator(object):
             repeat(buffer_data, buffer_cycles), (extra_cycle_data, self.last_cycle)
         )
 
+    def to_bytes(self):
+        return b"".join(chain(repeat(self.cycle_data, self.cycles), (self.last_cycle,)))
+
 
 # Generators for PCM data (wave functions, silence, etc.)
 
@@ -144,7 +147,8 @@ def generate_silence(
     bits_per_sample: int = DEFAULT_BIT_DEPTH,
     **kwargs,
 ):
-    cycle_data = (0).to_bytes(length=bits_per_sample, byteorder="little", signed=True)
+    bytes_per_sample = bits_per_sample // 8
+    cycle_data = (0).to_bytes(length=bytes_per_sample, byteorder="little", signed=True)
     return PCMDataGenerator(cycle_data=cycle_data, cycles=num_samples * num_channels)
 
 

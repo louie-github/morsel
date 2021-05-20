@@ -114,21 +114,20 @@ class PCMDataGenerator(object):
         self.cycles = cycles
         self.last_cycle = last_cycle
 
-    def buffer(self, max_bufsize: int) -> Iterator[bytes]:
+    def buffer(self, max_bufsize: int) -> Iterable[bytes]:
         cycles_per_buffer = max_bufsize // len(self.cycle_data)
         if cycles_per_buffer <= 1:
             # Do not bother buffering, return the cycles as they are
-            return chain(repeat(self.cycle_data, self.cycles), (self.last_cycle,))
-        cycles_per_buffer = min(self.cycles, cycles_per_buffer)
-        buffer_data = self.cycle_data * cycles_per_buffer
-        buffer_cycles, extra_cycles = divmod(self.cycles, cycles_per_buffer)
-        # We could also add the last cycle to the extra_cycles buffer
-        # data, but that would add a lot more unnecessary code to check
-        # that it stays under the specified maximum buffer size.
-        extra_cycle_data = self.cycle_data * extra_cycles
-        return chain(
-            repeat(buffer_data, buffer_cycles), (extra_cycle_data, self.last_cycle)
-        )
+            yield from repeat(self.cycle_data, self.cycles)
+            yield self.last_cycle
+        else:
+            cycles_per_buffer = min(self.cycles, cycles_per_buffer)
+            buffer_data = self.cycle_data * cycles_per_buffer
+            buffer_cycles, extra_cycles = divmod(self.cycles, cycles_per_buffer)
+            extra_cycle_data = self.cycle_data * extra_cycles
+            yield from repeat(buffer_data, buffer_cycles)
+            yield extra_cycle_data
+            yield self.last_cycle
 
     def to_bytes(self):
         return b"".join(chain(repeat(self.cycle_data, self.cycles), (self.last_cycle,)))

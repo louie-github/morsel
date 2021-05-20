@@ -114,8 +114,8 @@ class PCMDataGenerator(object):
         self.cycles = cycles
         self.last_cycle = last_cycle
 
-    def buffer(self, max_bufsize: int) -> Iterable[bytes]:
-        cycles_per_buffer = max_bufsize // len(self.cycle_data)
+    def buffer(self, target_bufsize: int) -> Iterable[bytes]:
+        cycles_per_buffer = target_bufsize // len(self.cycle_data)
         if cycles_per_buffer <= 1:
             # Do not bother buffering, return the cycles as they are
             yield from repeat(self.cycle_data, self.cycles)
@@ -130,12 +130,10 @@ class PCMDataGenerator(object):
             yield self.last_cycle
 
     def to_bytes(self):
-        return b"".join(chain(repeat(self.cycle_data, self.cycles), (self.last_cycle,)))
+        return b"".join(self.buffer(-1))
 
 
 # Generators for PCM data (wave functions, silence, etc.)
-
-
 def generate_silence(
     num_samples: int,
     num_channels: int = 2,

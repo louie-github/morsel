@@ -176,6 +176,11 @@ def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int) -> Iterab
         yield round((value - (-1.0)) * step_size + min_signed)
 
 
+def _repeat_channel_data(data, num_channels: int):
+    for sample in data:
+        yield from repeat(sample, num_channels)
+
+
 def _generate_sine_wave(
     *, angular_frequency: float, amplitude: float, num_samples: int, sample_rate: int
 ) -> Iterable[float]:
@@ -296,7 +301,7 @@ def generate_sine_wave(
     min_cycles = frequency // gcd(frequency, sample_rate)
     # Convert duration of exact cycle to duration in sample rate
     min_samples = sample_rate * min_cycles // frequency
-    min_samples = min_samples if min_samples < num_samples else num_samples
+    min_samples = min(min_samples, num_samples)
     angular_frequency = 2 * pi * frequency
     exact_cycle = _generate_sine_wave(
         angular_frequency=angular_frequency,
@@ -310,15 +315,11 @@ def generate_sine_wave(
     exact_cycle_bytes = (
         i.to_bytes(bytes_per_sample, "little", signed=True) for i in exact_cycle_ints
     )
-    exact_cycle_bytes = (
-        channel_data
-        for data in exact_cycle_bytes
-        for channel_data in repeat(data, num_channels)
-    )
+    exact_cycle_bytes = _repeat_channel_data(exact_cycle_bytes, num_channels)
     exact_cycle_data = b"".join(exact_cycle_bytes)
-    repetitions, last_cycle_samples = divmod(num_samples, min_samples)
-    last_cycle_bytes = exact_cycle_data[:last_cycle_samples]
-    return PCMDataGenerator(exact_cycle_data, repetitions, last_cycle_bytes)
+    repetitions, last_cycle_length = divmod(num_samples, min_samples)
+    last_cycle_data = exact_cycle_data[:last_cycle_length]
+    return PCMDataGenerator(exact_cycle_data, repetitions, last_cycle_data)
 
 
 # Writer functions for PCM data generators

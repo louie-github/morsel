@@ -4,8 +4,8 @@
 import io
 
 from math import gcd, pi, sin
-from itertools import chain, repeat
-from typing import BinaryIO, Iterable, Iterator
+from itertools import repeat
+from typing import BinaryIO, Iterable
 
 # TODO: Add module docstrings, __repr__() methods, and unit tests
 
@@ -109,7 +109,7 @@ def generate_pcm_wav_header(
 
 
 class PCMDataGenerator(object):
-    def __init__(self, cycle_data: bytes, cycles: int, last_cycle: bytes = b"") -> None:
+    def __init__(self, cycle_data: bytes, cycles: int, last_cycle: bytes = b""):
         self.cycle_data = cycle_data
         self.cycles = cycles
         self.last_cycle = last_cycle
@@ -129,7 +129,7 @@ class PCMDataGenerator(object):
             yield extra_cycle_data
             yield self.last_cycle
 
-    def to_bytes(self):
+    def to_bytes(self) -> bytes:
         return b"".join(self.buffer(-1))
 
 
@@ -139,14 +139,15 @@ def generate_silence(
     num_channels: int = 2,
     bits_per_sample: int = DEFAULT_BIT_DEPTH,
     **kwargs,
-):
+) -> PCMDataGenerator:
     bytes_per_sample = bits_per_sample // 8
     cycle_data = (0).to_bytes(length=bytes_per_sample, byteorder="little", signed=True)
     return PCMDataGenerator(cycle_data=cycle_data, cycles=num_samples * num_channels)
 
 
-def _clamp_floats(floats: Iterable[float]):
-    return (max(min(value, 1.0), -1.0) for value in floats)
+def _clamp_floats(floats: Iterable[float]) -> Iterable[float]:
+    for value in floats:
+        yield max(min(value, 1.0), -1.0)
 
 
 def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int) -> Iterable[int]:
@@ -171,7 +172,8 @@ def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int) -> Iterab
     # Every `x` increase above the minimum float value maps to an
     # `x * step_size` increase above the minimum int value
     step_size = (max_signed - min_signed) / (1.0 - (-1.0))
-    return (round((value - (-1.0)) * step_size + min_signed) for value in floats)
+    for value in floats:
+        yield round((value - (-1.0)) * step_size + min_signed)
 
 
 def _generate_sine_wave(
@@ -196,9 +198,8 @@ def _generate_sine_wave(
         Iterable[float]:
             The generated samples of the sine wave function.
     """
-    return (
-        amplitude * sin(angular_frequency * t / sample_rate) for t in range(num_samples)
-    )
+    for t in range(num_samples):
+        yield amplitude * sin(angular_frequency * t / sample_rate)
 
 
 def generate_sine_wave(
@@ -270,8 +271,9 @@ def generate_sine_wave(
             the given sample rate.
 
     Returns:
-        Iterator[bytes]:
-            An iterator of bytes objects containing PCM data.
+        PCMDataGenerator:
+            A PCMDataGenerator instance that can generate the final PCM
+            data.
     """
     if bits_per_sample not in SUPPORTED_BIT_DEPTHS:
         raise ValueError(
@@ -316,8 +318,7 @@ def generate_sine_wave(
     exact_cycle_data = b"".join(exact_cycle_bytes)
     repetitions, last_cycle_samples = divmod(num_samples, min_samples)
     last_cycle_bytes = exact_cycle_data[:last_cycle_samples]
-    output = PCMDataGenerator(exact_cycle_data, repetitions, last_cycle_bytes)
-    return output
+    return PCMDataGenerator(exact_cycle_data, repetitions, last_cycle_bytes)
 
 
 # Writer functions for PCM data generators

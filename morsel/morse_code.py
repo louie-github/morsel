@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import io
 import string
 
 from fractions import Fraction
 from typing import (
     BinaryIO,
     Callable,
+    Container,
     Dict,
     Iterable,
     Mapping,
@@ -143,10 +143,10 @@ def _reverse_dict(dct: Dict[X, Y]) -> Dict[Y, X]:
 def _encode(
     text: Iterable[str],
     mapping: Mapping[str, str] = INTERNATIONAL_MORSE_CODE,
-    placeholder: str = PLACEHOLDER,
     error_on_invalid: bool = False,
     word_separator: str = WORD_SEPARATOR,
-    whitespace=WHITESPACE,
+    placeholder: str = PLACEHOLDER,
+    whitespace: Container[str] = WHITESPACE,
 ):
     text = "".join(text).casefold()
     word_separator = f" {word_separator} "
@@ -169,16 +169,15 @@ def _encode(
         yield encoded_character
 
 
-# TODO: Use proper function signature rather than *args and **kwargs
 def encode(
     text: Iterable[str],
     mapping: Mapping[str, str] = INTERNATIONAL_MORSE_CODE,
-    join=True,
+    join: bool = True,
     error_on_invalid: bool = False,
     letter_separator=LETTER_SEPARATOR,
     word_separator: str = WORD_SEPARATOR,
     placeholder: str = PLACEHOLDER,
-    whitespace=WHITESPACE,
+    whitespace: Container[str] = WHITESPACE,
 ):
     output = _encode(
         text=text,
@@ -195,8 +194,8 @@ def encode(
 def _decode(
     text: str,
     mapping: Mapping[str, str] = _reverse_dict(INTERNATIONAL_MORSE_CODE),
-    word_separator=WORD_SEPARATOR,
-    letter_separator=LETTER_SEPARATOR,
+    word_separator: str = WORD_SEPARATOR,
+    letter_separator: str = LETTER_SEPARATOR,
     error_on_invalid: bool = False,
     include_empty_letters: bool = False,
     include_empty_words: bool = False,
@@ -226,8 +225,26 @@ def _decode(
 
 
 # TODO: Use proper function signature rather than *args and **kwargs
-def decode(*args, join: bool = True, separator: str = " ", **kwargs):
-    output = _decode(*args, **kwargs)
+def decode(
+    text: str,
+    mapping: Mapping[str, str] = _reverse_dict(INTERNATIONAL_MORSE_CODE),
+    join: bool = True,
+    separator: str = " ",
+    word_separator: str = WORD_SEPARATOR,
+    letter_separator: str = LETTER_SEPARATOR,
+    error_on_invalid: bool = False,
+    include_empty_letters: bool = False,
+    include_empty_words: bool = False,
+):
+    output = _decode(
+        text=text,
+        mapping=mapping,
+        word_separator=word_separator,
+        letter_separator=letter_separator,
+        error_on_invalid=error_on_invalid,
+        include_empty_letters=include_empty_letters,
+        include_empty_words=include_empty_words,
+    )
     if join:
         output = separator.join(output)
     return output
@@ -236,18 +253,18 @@ def decode(*args, join: bool = True, separator: str = " ", **kwargs):
 def export(
     text: str,
     fp: BinaryIO,
-    # generate_sine_wave kwargs
+    # generate_sine_wave() keyword arguments
     frequency: int = 500,
     amplitude: float = 0.75,
     num_channels: int = 2,
     sample_rate: int = 48000,
     bits_per_sample: int = DEFAULT_BIT_DEPTH,
     allow_clipping: bool = True,
+    # export() function keyword arguments
     word_separator: str = WORD_SEPARATOR,
     letter_separator: str = " ",
     error_on_invalid: bool = True,
     dot_length=DEFAULT_DOT_LENGTH,
-    buffer_size: int = io.DEFAULT_BUFFER_SIZE,
 ) -> int:
     audio_data = MorseCodeAudio.from_lengths(
         MorseCodeLengths.from_dot_length(dot_length),
@@ -287,7 +304,7 @@ def export(
         for character in letter:
             if not character:
                 continue
-            if character == ".":
+            elif character == ".":
                 letter_buffer.append(dot_data)
             elif character == "-":
                 letter_buffer.append(dash_data)

@@ -21,7 +21,7 @@ See [Contributing](##contributing) for more details.
    - [X] Encode (Text to Morse code)
    - [ ] Decode (Morse code to text)
  - [X] PCM WAVE (.wav) file format support
- - [ ] Audio export capabilities for Morse code translation
+ - [X] Audio export capabilities for Morse code translation
  - [ ] Documentation
  - [ ] Unit tests
  - [ ] Package code for PyPI

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import math
 import io
+import itertools
 
-from math import gcd, pi, sin
-from itertools import repeat
 from typing import BinaryIO, Iterable
 
 # TODO: Add module docstrings, __repr__() methods, and unit tests
@@ -118,14 +118,14 @@ class PCMDataGenerator(object):
         cycles_per_buffer = target_bufsize // len(self.cycle_data)
         if cycles_per_buffer <= 1:
             # Do not bother buffering, return the cycles as they are
-            yield from repeat(self.cycle_data, self.cycles)
+            yield from itertools.repeat(self.cycle_data, self.cycles)
             yield self.last_cycle
         else:
             cycles_per_buffer = min(self.cycles, cycles_per_buffer)
             buffer_data = self.cycle_data * cycles_per_buffer
             buffer_cycles, extra_cycles = divmod(self.cycles, cycles_per_buffer)
             extra_cycle_data = self.cycle_data * extra_cycles
-            yield from repeat(buffer_data, buffer_cycles)
+            yield from itertools.repeat(buffer_data, buffer_cycles)
             yield extra_cycle_data
             yield self.last_cycle
 
@@ -177,6 +177,7 @@ def _map_floats_to_ints(floats: Iterable[float], bits_per_sample: int) -> Iterab
 
 
 def _repeat_channel_data(data, num_channels: int):
+    repeat = itertools.repeat
     for sample in data:
         yield from repeat(sample, num_channels)
 
@@ -203,6 +204,7 @@ def _generate_sine_wave(
         Iterable[float]:
             The generated samples of the sine wave function.
     """
+    sin = math.sin
     for t in range(num_samples):
         yield amplitude * sin(angular_frequency * t / sample_rate)
 
@@ -298,11 +300,11 @@ def generate_sine_wave(
             + f"rate {sample_rate}Hz"
         )
     # "Exact cycle" algorithm
-    min_cycles = frequency // gcd(frequency, sample_rate)
+    min_cycles = frequency // math.gcd(frequency, sample_rate)
     # Convert duration of exact cycle to duration in sample rate
     min_samples = sample_rate * min_cycles // frequency
     min_samples = min(min_samples, num_samples)
-    angular_frequency = 2 * pi * frequency
+    angular_frequency = 2 * math.pi * frequency
     exact_cycle = _generate_sine_wave(
         angular_frequency=angular_frequency,
         amplitude=amplitude,

@@ -37,11 +37,15 @@ WHITESPACE = set(string.whitespace)
 # Assuming one word = 5 characters
 WPM = 15
 
+DEFAULT_DOT_LENGTH = Fraction(1200, WPM)
+
 
 # Based on the "PARIS" standard; durations in milliseconds (ms)
 # Relative lengths and spacing are based off the International Morse
 # Code standard (ITU-R M.1677).
 class MorseCodeLengths(NamedTuple):
+    """All lengths are specified in milliseconds."""
+
     dot: int
     dash: int
     space_within_letter: int

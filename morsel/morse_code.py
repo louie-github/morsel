@@ -5,7 +5,15 @@ import io
 import string
 
 from fractions import Fraction
-from typing import BinaryIO, Callable, Iterable, Mapping, NamedTuple
+from typing import (
+    BinaryIO,
+    Callable,
+    Dict,
+    Iterable,
+    Mapping,
+    NamedTuple,
+    TypeVar,
+)
 
 from .mappings import INTERNATIONAL_MORSE_CODE
 from .wav import (
@@ -30,8 +38,13 @@ aforementioned ITU-R M.1677 standard for International Morse Code, and
 should not be construed or understood in any way to be as such.
 """
 
+X = TypeVar("X")
+Y = TypeVar("Y")
+
+
 # Default settings for Morse code conversion
 WORD_SEPARATOR = "/"
+LETTER_SEPARATOR = " "
 PLACEHOLDER = "?"  # No translation
 WHITESPACE = set(string.whitespace)
 # Assuming one word = 5 characters
@@ -123,6 +136,10 @@ class MorseCodeAudio(NamedTuple):
         )
 
 
+def _reverse_dict(dct: Dict[X, Y]) -> Dict[Y, X]:
+    return {value: key for key, value in dct.items()}
+
+
 def _encode(
     text: Iterable[str],
     mapping: Mapping[str, str] = INTERNATIONAL_MORSE_CODE,
@@ -152,9 +169,67 @@ def _encode(
         yield encoded_character
 
 
-def encode(*args, join=True, letter_separator=" ", **kwargs):
-    output = _encode(*args, **kwargs)
+# TODO: Use proper function signature rather than *args and **kwargs
+def encode(
+    text: Iterable[str],
+    mapping: Mapping[str, str] = INTERNATIONAL_MORSE_CODE,
+    join=True,
+    error_on_invalid: bool = False,
+    letter_separator=LETTER_SEPARATOR,
+    word_separator: str = WORD_SEPARATOR,
+    placeholder: str = PLACEHOLDER,
+    whitespace=WHITESPACE,
+):
+    output = _encode(
+        text=text,
+        mapping=mapping,
+        placeholder=placeholder,
+        error_on_invalid=error_on_invalid,
+        word_separator=word_separator,
+        whitespace=whitespace,
+    )
     output = letter_separator.join(output) if join else output
+    return output
+
+
+def _decode(
+    text: str,
+    mapping: Mapping[str, str] = _reverse_dict(INTERNATIONAL_MORSE_CODE),
+    word_separator=WORD_SEPARATOR,
+    letter_separator=LETTER_SEPARATOR,
+    error_on_invalid: bool = False,
+    include_empty_letters: bool = False,
+    include_empty_words: bool = False,
+):
+    current_word = []
+    for letter in text.split(letter_separator):
+        if not letter:
+            if include_empty_letters:
+                yield letter
+            continue
+        elif letter == word_separator:
+            if current_word or include_empty_words:
+                yield "".join(current_word)
+                current_word.clear()
+            continue
+        else:
+            decoded_letter = mapping.get(letter, None)
+            if decoded_letter is None:
+                if error_on_invalid:
+                    raise ValueError(
+                        f'Could not find a value for Morse Code signal: "{repr(letter)}"'
+                    )
+            else:
+                current_word.append(decoded_letter)
+    if current_word or include_empty_words:
+        yield "".join(current_word)
+
+
+# TODO: Use proper function signature rather than *args and **kwargs
+def decode(*args, join: bool = True, separator: str = " ", **kwargs):
+    output = _decode(*args, **kwargs)
+    if join:
+        output = separator.join(output)
     return output
 
 

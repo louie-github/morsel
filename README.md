@@ -17,9 +17,9 @@ If you want to help with development, feel free to open an
 [pull request](https://github.com/louie-github/morsel/pulls)!
 See [Contributing](##contributing) for more details.
 
- - [ ] Morse code translation capabilities
+ - [X] Morse code translation capabilities
    - [X] Encode (Text to Morse code)
-   - [ ] Decode (Morse code to text)
+   - [X] Decode (Morse code to text)
  - [X] PCM WAVE (.wav) file format support
  - [X] Audio export capabilities for Morse code translation
  - [ ] Documentation

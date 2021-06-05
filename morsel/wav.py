@@ -7,6 +7,8 @@ import itertools
 
 from typing import BinaryIO, Iterable
 
+from .utils import convert_and_warn
+
 # TODO: Add module docstrings, __repr__() methods, and unit tests
 
 # Currently, this module only supports exporting s16le, s24le, and s32le
@@ -60,6 +62,11 @@ def generate_pcm_wav_header(
         ValueError:
             An unsupported bit depth was specified.
     """
+    num_samples = convert_and_warn(num_samples, int, name="num_samples")
+    num_channels = convert_and_warn(num_channels, int, name="num_channels")
+    sample_rate = convert_and_warn(sample_rate, int, name="sample_rate")
+    bits_per_sample = convert_and_warn(bits_per_sample, int, name="bits_per_sample")
+
     if bits_per_sample not in SUPPORTED_BIT_DEPTHS:
         raise ValueError(
             "Bit depths other than 16, 24, or 32 are currently "
@@ -140,6 +147,10 @@ def generate_silence(
     bits_per_sample: int = DEFAULT_BIT_DEPTH,
     **kwargs,
 ) -> PCMDataGenerator:
+    num_samples = convert_and_warn(num_samples, int, name="num_samples")
+    num_channels = convert_and_warn(num_channels, int, name="num_channels")
+    bits_per_sample = convert_and_warn(bits_per_sample, int, name="bits_per_sample")
+
     bytes_per_sample = bits_per_sample // 8
     cycle_data = (0).to_bytes(length=bytes_per_sample, byteorder="little", signed=True)
     return PCMDataGenerator(cycle_data=cycle_data, cycles=num_samples * num_channels)
@@ -299,6 +310,12 @@ def generate_sine_wave(
             f"Given frequency {frequency}Hz cannot be represented with sample "
             + f"rate {sample_rate}Hz"
         )
+    frequency = convert_and_warn(frequency, int, name="frequency")
+    amplitude = convert_and_warn(amplitude, float, name="amplitude")
+    num_samples = convert_and_warn(num_samples, int, name="num_samples")
+    num_channels = convert_and_warn(num_channels, int, name="num_channels")
+    sample_rate = convert_and_warn(sample_rate, int, name="sample_rate")
+    bits_per_sample = convert_and_warn(bits_per_sample, int, name="bits_per_sample")
     # "Exact cycle" algorithm
     min_cycles = frequency // math.gcd(frequency, sample_rate)
     # Convert duration of exact cycle to duration in sample rate

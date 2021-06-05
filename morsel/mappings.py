@@ -38,7 +38,7 @@ INTERNATIONAL_MORSE_CODE = _casefold_dict(
         "X": "-..-",
         "Y": "-.--",
         "Z": "--..",
-        # Figures
+        # Figures (numbers)
         "1": ".----",
         "2": "..---",
         "3": "...--",

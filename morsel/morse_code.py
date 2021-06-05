@@ -123,9 +123,6 @@ class MorseCodeAudio(NamedTuple):
         )
 
 
-DEFAULT_DOT_LENGTH = Fraction(1200, WPM)
-
-
 def _encode(
     text: Iterable[str],
     mapping: Mapping[str, str] = INTERNATIONAL_MORSE_CODE,
@@ -155,9 +152,9 @@ def _encode(
         yield encoded_character
 
 
-def encode(*args, join=True, **kwargs):
+def encode(*args, join=True, letter_separator=" ", **kwargs):
     output = _encode(*args, **kwargs)
-    output = " ".join(output) if join else output
+    output = letter_separator.join(output) if join else output
     return output
 
 
@@ -199,31 +196,32 @@ def export(
     first_letter = True
     first_word = True
     bytes_written = 0
-    for word in text.split(word_separator):
-        if not word:
+    for letter in text.split(letter_separator):
+        if not letter:
             continue
-        if not first_word:
-            bytes_written += fp.write(space_between_words_data)
-        for letter in word.split(letter_separator):
-            if not letter:
-                continue
+        if letter == word_separator:
+            if not first_word:
+                bytes_written += fp.write(space_between_words_data)
+            first_word = False
+            first_letter = True
+        else:
             if not first_letter:
                 bytes_written += fp.write(space_between_letters_data)
-            letter_buffer.clear()
-            for character in letter:
-                if character == ".":
-                    letter_buffer.append(dot_data)
-                elif character == "-":
-                    letter_buffer.append(dash_data)
-                elif error_on_invalid:
-                    raise ValueError(
-                        f"Invalid Morse code character: '{repr(character)}'"
-                    )
-                else:
-                    pass
-            bytes_written += fp.write(space_within_letter_data.join(letter_buffer))
             first_letter = False
-        first_word = False
+        letter_buffer.clear()
+        for character in letter:
+            if not character:
+                continue
+            if character == ".":
+                letter_buffer.append(dot_data)
+            elif character == "-":
+                letter_buffer.append(dash_data)
+            elif error_on_invalid:
+                raise ValueError(f"Invalid Morse code character: '{repr(character)}'")
+            else:
+                pass
+        bytes_written += fp.write(space_within_letter_data.join(letter_buffer))
+        first_letter = False
     # Write header after writing data (since we don't know how many
     # samples will be written until writing is complete)
     fp.seek(0)
